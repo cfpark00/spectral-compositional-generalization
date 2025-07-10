@@ -19,7 +19,7 @@ analysis_config_path: "configs/analysis.yaml"
 # Random seeds for reproducibility
 # Can be single values or lists for multiple runs
 data_seed: [42]      # Seeds for data generation (spectra sampling, train/test splits)
-training_seed: [123, 124, 125, 126, 127] # Seeds for model initialization and training (weights, dropout, etc.)
+training_seed: [123, 124] # Seeds for model initialization and training (weights, dropout, etc.)
 
 # Pipeline control flags
 generate_data: true    # Generate synthetic spectral data
