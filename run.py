@@ -12,8 +12,8 @@ import subprocess
 import shutil
 from pathlib import Path
 
-# Add project root to path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+# Add project root to path (run.py is now in root)
+sys.path.append(os.path.dirname(__file__))
 
 
 def load_meta_config(config_path):
@@ -410,14 +410,7 @@ def main():
     
     # Get directories
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    project_root = os.path.dirname(script_dir)
-    
-    # Check if .env exists
-    env_path = os.path.join(project_root, '.env')
-    if not os.path.exists(env_path):
-        print("❌ .env file not found in project root!")
-        print(f"Please run: cd {project_root} && ./setup_env.sh")
-        sys.exit(1)
+    project_root = script_dir  # Now run.py is in root
     
     # Load meta configuration
     print(f"\nLoading meta configuration from: {args.meta_config}")
