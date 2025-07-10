@@ -8,18 +8,6 @@ import numpy as np
 import random
 import os
 from typing import Dict, Any
-from dotenv import load_dotenv, find_dotenv
-
-
-def load_env() -> Dict[str, str]:
-    """Load environment variables from .env file."""
-    # Find and load .env file, starting from current directory up to project root
-    dotenv_path = find_dotenv()
-    if dotenv_path:
-        load_dotenv(dotenv_path)
-    
-    # Return the loaded environment variables as a dict
-    return dict(os.environ)
 
 
 def load_multiple_configs(data_path: str, distribution_path: str, training_path: str) -> dict:
@@ -59,27 +47,13 @@ def load_multiple_configs(data_path: str, distribution_path: str, training_path:
     if 'experiment_name' not in config:
         config['experiment_name'] = 'demo_simple'
     
-    # Load environment variables from .env file
-    env_vars = load_env()
-    
-    # Optional: override device from .env if set
-    if 'DEVICE' in env_vars:
-        config['device'] = env_vars['DEVICE']
-    
     return config
 
 
 def load_config(config_path: str) -> dict:
-    """Load configuration from YAML file and merge with .env variables."""
+    """Load configuration from YAML file."""
     with open(config_path, 'r') as f:
         config = yaml.safe_load(f)
-    
-    # Load environment variables from .env file
-    env_vars = load_env()
-    
-    # Optional: override device from .env if set
-    if 'DEVICE' in env_vars:
-        config['device'] = env_vars['DEVICE']
     
     return config
 

@@ -8,7 +8,6 @@ import sys
 import json
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from src.config import load_env
 from src.spectra_generator import load_spectral_config, generate_split_data
 from src.data_utils import save_data
 import yaml

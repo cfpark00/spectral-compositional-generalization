@@ -30,10 +30,7 @@ git clone <repository_url>
 cd SpectralCompGenTutorial
 
 # Install dependencies
-pip install torch numpy matplotlib pyyaml tqdm python-dotenv
-
-# Setup environment configuration
-./setup_env.sh
+pip install torch numpy matplotlib pyyaml tqdm
 ```
 
 ### Running the Demo
@@ -111,8 +108,6 @@ SpectralCompGenTutorial/
 │   ├── generated/                # Synthetic datasets
 │   └── results/                  # Experiment results
 ├── demo.sh                       # Main demo script
-├── setup_env.sh                  # Environment setup
-├── .env                          # Local configuration
 └── README.md                     # This file
 ```
 
@@ -261,15 +256,6 @@ When running the default compositional gap experiment:
    - Degraded but non-zero performance on combinations
    - Demonstrates partial compositional generalization
 
-## Environment Variables
-
-The `.env` file (created by `setup_env.sh`) contains:
-```bash
-PROJECT_ROOT=/path/to/SpectralCompGenTutorial
-DATA_DIR=./data              # Can be changed to fast storage
-CUDA_VISIBLE_DEVICES=0       # GPU selection
-TORCH_NUM_THREADS=4          # CPU threads
-```
 
 ## Extending the Tutorial
 
