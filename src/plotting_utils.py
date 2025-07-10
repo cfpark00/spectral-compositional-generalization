@@ -330,72 +330,149 @@ def load_generated_data(data_path):
 
 
 def plot_training_curves(train_dir, output_dir):
-    """Plot MSE curves for train and test from checkpoint stats."""
-    ckpts_dir = os.path.join(train_dir, 'ckpts')
+    """Plot MSE curves for train and test from checkpoint stats.
     
-    if not os.path.exists(ckpts_dir):
-        print("  ⚠️  No checkpoints found - skipping training curves")
-        return
+    If train_dir points to a single run, plot just that run.
+    If train_dir points to a runs directory with multiple seeds, plot all with average.
     
-    # Collect checkpoint data
-    checkpoint_data = []
+    Returns:
+        bool: True if plot was created, False otherwise
+    """
+    # Check if this is a single run or multiple runs
+    runs_to_plot = []
     
-    # Get all checkpoint directories
-    ckpt_dirs = [d for d in os.listdir(ckpts_dir) if d.startswith('ckpt-')]
-    ckpt_dirs.sort(key=lambda x: int(x.split('-')[1]))
+    # Check if train_dir itself is a run directory (has train/ckpts)
+    single_run_ckpts = os.path.join(train_dir, 'train', 'ckpts')
+    if not os.path.exists(single_run_ckpts):
+        single_run_ckpts = os.path.join(train_dir, 'ckpts')
     
-    for ckpt_dir in ckpt_dirs:
-        stats_path = os.path.join(ckpts_dir, ckpt_dir, 'stats.json')
-        if os.path.exists(stats_path):
-            with open(stats_path, 'r') as f:
-                stats = json.load(f)
-                checkpoint_data.append(stats)
+    if os.path.exists(single_run_ckpts):
+        # Single run mode
+        runs_to_plot = [(os.path.basename(train_dir), train_dir)]
+    else:
+        # Multiple runs mode - train_dir is the parent runs directory
+        run_dirs = [d for d in os.listdir(train_dir) if d.startswith('seed-') and os.path.isdir(os.path.join(train_dir, d))]
+        runs_to_plot = [(run_dir, os.path.join(train_dir, run_dir)) for run_dir in sorted(run_dirs)]
     
-    if not checkpoint_data:
+    if not runs_to_plot:
+        # Don't create an empty plot when no runs exist
+        return False
+    
+    # Collect data from all runs
+    all_run_data = {}
+    max_steps = 0
+    
+    for run_name, run_path in runs_to_plot:
+        # Try both old and new directory structures
+        ckpts_dir = os.path.join(run_path, 'train', 'ckpts')
+        if not os.path.exists(ckpts_dir):
+            ckpts_dir = os.path.join(run_path, 'ckpts')
+        
+        if not os.path.exists(ckpts_dir):
+            continue
+        
+        # Collect checkpoint data
+        checkpoint_data = []
+        
+        # Get all checkpoint directories
+        ckpt_dirs = [d for d in os.listdir(ckpts_dir) if d.startswith('ckpt-')]
+        ckpt_dirs.sort(key=lambda x: int(x.split('-')[1]))
+        
+        for ckpt_dir in ckpt_dirs:
+            stats_path = os.path.join(ckpts_dir, ckpt_dir, 'stats.json')
+            if os.path.exists(stats_path):
+                with open(stats_path, 'r') as f:
+                    stats = json.load(f)
+                    checkpoint_data.append(stats)
+        
+        if checkpoint_data:
+            all_run_data[run_name] = checkpoint_data
+            max_steps = max(max_steps, checkpoint_data[-1]['step'])
+    
+    if not all_run_data:
         print("  ⚠️  No checkpoint stats found - skipping training curves")
-        return
+        return False
     
-    # Extract data for plotting
-    checkpoints = [d['checkpoint_num'] for d in checkpoint_data]
-    steps = [d['step'] for d in checkpoint_data]
-    train_losses = [d['train_loss'] for d in checkpoint_data]
-    test_losses = [d['test_loss'] for d in checkpoint_data]
+    # Create single plot (removed checkpoint plot)
+    fig, ax = plt.subplots(figsize=(10, 6))
     
-    # Create plots
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
+    # Plot individual runs
+    for idx, (run_name, checkpoint_data) in enumerate(all_run_data.items()):
+        steps = [d['step'] for d in checkpoint_data]
+        train_losses = [d['train_loss'] for d in checkpoint_data]
+        test_losses = [d['test_loss'] for d in checkpoint_data]
+        
+        # Plot by training step - blue for train, red for test
+        ax.plot(steps, train_losses, '-', color='blue', alpha=0.3, linewidth=1)
+        ax.plot(steps, test_losses, '-', color='red', alpha=0.3, linewidth=1)
     
-    # Plot by checkpoint number
-    ax1.plot(checkpoints, train_losses, 'b-o', label='Train MSE', alpha=0.8)
-    ax1.plot(checkpoints, test_losses, 'r-s', label='Test MSE', alpha=0.8)
-    ax1.set_xlabel('Checkpoint Number')
-    ax1.set_ylabel('MSE Loss')
-    ax1.set_title('Training Progress by Checkpoint')
-    ax1.set_yscale('log')
-    ax1.legend()
-    ax1.grid(True, alpha=0.3)
+    # If multiple runs, compute and plot averages
+    if len(all_run_data) > 1:
+        # Find common checkpoints across all runs
+        all_checkpoints = set()
+        for checkpoint_data in all_run_data.values():
+            all_checkpoints.update([d['checkpoint_num'] for d in checkpoint_data])
+        common_checkpoints = sorted(all_checkpoints)
+        
+        # Compute averages for each checkpoint
+        avg_train_by_ckpt = []
+        avg_test_by_ckpt = []
+        avg_steps_by_ckpt = []
+        
+        for ckpt in common_checkpoints:
+            train_losses_at_ckpt = []
+            test_losses_at_ckpt = []
+            steps_at_ckpt = []
+            
+            for checkpoint_data in all_run_data.values():
+                for d in checkpoint_data:
+                    if d['checkpoint_num'] == ckpt:
+                        train_losses_at_ckpt.append(d['train_loss'])
+                        test_losses_at_ckpt.append(d['test_loss'])
+                        steps_at_ckpt.append(d['step'])
+                        break
+            
+            if train_losses_at_ckpt:
+                avg_train_by_ckpt.append(np.mean(train_losses_at_ckpt))
+                avg_test_by_ckpt.append(np.mean(test_losses_at_ckpt))
+                avg_steps_by_ckpt.append(np.mean(steps_at_ckpt))
+        
+        # Plot averages
+        ax.plot(avg_steps_by_ckpt, avg_train_by_ckpt, 'b-o', label='Train MSE', linewidth=3, markersize=8)
+        ax.plot(avg_steps_by_ckpt, avg_test_by_ckpt, 'r-s', label='Test MSE', linewidth=3, markersize=8)
+    else:
+        # Single run - add labels
+        ax.plot([], [], 'b-', label='Train MSE', linewidth=2)
+        ax.plot([], [], 'r-', label='Test MSE', linewidth=2)
     
-    # Plot by training step
-    ax2.plot(steps, train_losses, 'b-o', label='Train MSE', alpha=0.8)
-    ax2.plot(steps, test_losses, 'r-s', label='Test MSE', alpha=0.8)
-    ax2.set_xlabel('Training Step')
-    ax2.set_ylabel('MSE Loss')
-    ax2.set_title('Training Progress by Step')
-    ax2.set_yscale('log')
-    ax2.legend()
-    ax2.grid(True, alpha=0.3)
+    # Configure axes
+    ax.set_xlabel('Training Step')
+    ax.set_ylabel('MSE Loss')
+    ax.set_title('Training Progress')
+    ax.set_yscale('log')
+    ax.legend()
+    ax.grid(True, alpha=0.3)
     
     plt.tight_layout()
     fig.savefig(os.path.join(output_dir, 'training_curves.png'), dpi=300, bbox_inches='tight')
     plt.close()
+    return True
 
 
 def plot_prediction_analysis(train_dir, data_dict, output_dir):
-    """Plot analysis of best checkpoint predictions vs ground truth."""
-    ckpts_dir = os.path.join(train_dir, 'ckpts')
+    """Plot analysis of best checkpoint predictions vs ground truth.
+    
+    Returns:
+        bool: True if plot was created, False otherwise
+    """
+    # Try both old and new directory structures
+    ckpts_dir = os.path.join(train_dir, 'train', 'ckpts')
+    if not os.path.exists(ckpts_dir):
+        ckpts_dir = os.path.join(train_dir, 'ckpts')
     
     if not os.path.exists(ckpts_dir):
         print("  ⚠️  No checkpoints found - skipping prediction analysis")
-        return
+        return False
     
     # Find best checkpoint (lowest test loss)
     best_ckpt = None
@@ -413,15 +490,22 @@ def plot_prediction_analysis(train_dir, data_dict, output_dir):
     
     if best_ckpt is None:
         print("  ⚠️  No valid checkpoints found - skipping prediction analysis")
-        return
+        return False
     
-    # Load best predictions
-    pred_path = os.path.join(ckpts_dir, best_ckpt, 'test_predictions.pt')
-    if not os.path.exists(pred_path):
+    # Load best predictions (try both .pt and .csv)
+    pred_path_pt = os.path.join(ckpts_dir, best_ckpt, 'test_predictions.pt')
+    pred_path_csv = os.path.join(ckpts_dir, best_ckpt, 'test_predictions.csv')
+    
+    if os.path.exists(pred_path_pt):
+        predictions = torch.load(pred_path_pt)
+    elif os.path.exists(pred_path_csv):
+        import pandas as pd
+        pred_df = pd.read_csv(pred_path_csv)
+        predictions = torch.tensor(pred_df.values, dtype=torch.float32)
+    else:
         print("  ⚠️  No predictions found - skipping prediction analysis")
-        return
+        return False
     
-    predictions = torch.load(pred_path)
     ground_truth = data_dict['test']['abundances']
     
     # Create scatter plot for first two components
@@ -452,6 +536,7 @@ def plot_prediction_analysis(train_dir, data_dict, output_dir):
     plt.tight_layout()
     fig.savefig(os.path.join(output_dir, 'prediction_analysis.png'), dpi=300, bbox_inches='tight')
     plt.close()
+    return True
 
 
 def plot_mse_trajectory(analysis_data_path, output_dir):
@@ -723,15 +808,15 @@ def plot_test_abundance_by_mse(analysis_data_path, output_dir, exp_dir, analysis
     comp1_abundances = test_abundances[:, comp1_idx].numpy()
     comp2_abundances = test_abundances[:, comp2_idx].numpy()
     
-    # Create colormap
+    # Create colormap - use RdYlBu_r so red=bad, blue=good
     vmin, vmax = np.percentile(log_ensemble_mse, [5, 95])  # Use percentiles for better color range
     norm = Normalize(vmin=vmin, vmax=vmax)
-    sm = ScalarMappable(norm=norm, cmap='viridis')
+    sm = ScalarMappable(norm=norm, cmap='RdYlBu_r')
     
-    # Create scatter plot
+    # Create scatter plot with square markers to match abundance_scatter
     scatter = ax.scatter(comp1_abundances, comp2_abundances, 
-                        c=log_ensemble_mse, cmap='viridis', 
-                        s=50, alpha=0.7, edgecolors='black', linewidth=0.5,
+                        c=log_ensemble_mse, cmap='RdYlBu_r', 
+                        s=30, alpha=0.5, marker='s',
                         norm=norm)
     
     # Add colorbar

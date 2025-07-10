@@ -5,7 +5,7 @@
 splits:
   train:
     # Number of samples for this split
-    n_samples: 4000
+    n_samples: 4096
     
     # Distribution specification using component combinations
     distribution:
@@ -29,7 +29,7 @@ splits:
   
   test:
     # Number of samples for test split
-    n_samples: 1000
+    n_samples: 1024
     
     # Test distribution - compositional gap!
     distribution:

@@ -269,7 +269,6 @@ def create_visualizations(meta_config, exp_dir, script_dir):
         plot_test_samples,
         plot_abundance_scatter,
         plot_training_curves,
-        plot_prediction_analysis,
         plot_mse_trajectory,
         plot_mse_time_series,
         plot_test_abundance_by_mse,
@@ -348,19 +347,12 @@ def create_visualizations(meta_config, exp_dir, script_dir):
     
     # Create training visualizations if training was run
     runs_path = os.path.join(exp_dir, 'runs')
-    if os.path.exists(runs_path):
+    if os.path.exists(runs_path) and any(d.startswith('seed-') for d in os.listdir(runs_path)):
         print("\nCreating training visualizations...")
         
-        # For now, use first run for training curves
-        first_run = sorted(os.listdir(runs_path))[0] if os.listdir(runs_path) else None
-        if first_run:
-            first_run_path = os.path.join(runs_path, first_run)
-            plot_training_curves(first_run_path, plots_dir)
+        # Pass the entire runs directory for multi-run plotting
+        if plot_training_curves(runs_path, plots_dir):
             print("  ✓ Training curves plot saved")
-            
-            if os.path.exists(data_path) and 'data_dict' in locals():
-                plot_prediction_analysis(first_run_path, data_dict, plots_dir)
-                print("  ✓ Prediction analysis plot saved")
     
     # Create analysis visualizations if analysis data is available
     analysis_path = os.path.join(exp_dir, 'analysis')
@@ -397,9 +389,8 @@ def create_visualizations(meta_config, exp_dir, script_dir):
         print("  - train_samples.png: Training distribution samples")
         print("  - test_samples.png: Test distribution samples")
         print("  - abundance_scatter.png: Train vs test in abundance space")
-    if os.path.exists(runs_path):
+    if os.path.exists(runs_path) and os.path.exists(os.path.join(plots_dir, 'training_curves.png')):
         print("  - training_curves.png: MSE curves for train and test")
-        print("  - prediction_analysis.png: Best model predictions vs ground truth")
     if os.path.exists(os.path.join(exp_dir, 'analysis')):
         print("  - mse_trajectory.png: MSE trajectory plot (all runs overlapped)")
         print("  - mse_time_series.png: Component MSE vs training steps")
@@ -546,7 +537,7 @@ def main():
     print("│       ├── test_spectra.pt")
     print("│       ├── test_abundances.pt")
     print("│       └── metadata.json")
-    if meta_config.get('run_training', True):
+    if meta_config.get('run_training', True) and os.path.exists(os.path.join(exp_dir, 'runs')):
         print("├── runs/              # Training results")
         print("│   └── seed-*/        # Results for each training seed")
         print("│       └── train/     # Training outputs")
@@ -563,7 +554,6 @@ def main():
         print("    ├── abundance_scatter.png    # Compositional gap visualization")
     if meta_config.get('run_training', True):
         print("    ├── training_curves.png      # MSE curves during training")
-        print("    ├── prediction_analysis.png  # Best model predictions")
     if meta_config.get('run_analysis', True):
         print("    ├── mse_trajectory.png       # MSE trajectory (all runs)")
         print("    ├── mse_time_series.png      # Component MSE vs time")
