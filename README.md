@@ -6,7 +6,7 @@ A tutorial demonstrating compositional generalization using synthetic spectrosco
 
 ```bash
 # Install dependencies
-pip install torch numpy matplotlib pyyaml tqdm
+pip install -r requirements.txt
 
 # Run the complete pipeline
 python run.py meta_config.yaml
