@@ -219,8 +219,8 @@ def save_checkpoint(model: nn.Module, optimizer: optim.Optimizer, checkpoint_num
         'step': step,
         'epoch': epoch,
         'batch_idx': batch_idx,
-        'train_loss': train_loss,
-        'test_loss': val_loss,
+        'train_loss': float(train_loss),
+        'test_loss': float(val_loss),
     }
     
     with open(os.path.join(ckpt_dir, "stats.json"), 'w') as f:
