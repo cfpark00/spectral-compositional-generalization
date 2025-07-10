@@ -5,16 +5,16 @@
 exp_dir: "./exp"
 
 # Path to spectral configuration file (physics parameters)
-spectra_config_path: "../configs/synthetic_spectra.yaml"
+spectra_config_path: "configs/synthetic_spectra.yaml"
 
 # Path to data distribution configuration file (train/test splits)
-distribution_config_path: "../configs/data_distribution.yaml"
+distribution_config_path: "configs/data_distribution.yaml"
 
 # Path to training configuration file (model and training parameters)
-training_config_path: "../configs/training.yaml"
+training_config_path: "configs/training.yaml"
 
 # Path to analysis configuration file (MSE trajectory plotting)
-analysis_config_path: "../configs/analysis.yaml"
+analysis_config_path: "configs/analysis.yaml"
 
 # Random seeds for reproducibility
 # Can be single values or lists for multiple runs
