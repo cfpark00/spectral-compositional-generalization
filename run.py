@@ -483,6 +483,9 @@ def main():
         generate_data(meta_config, exp_dir, project_root)
         print("  ✓ Data generated in exp/data/")
         
+        # Plot immediately after data generation
+        print(f"\nStep {step_num}a: Creating data visualizations...")
+        create_visualizations(meta_config, exp_dir, script_dir)
         step_num += 1
     else:
         print(f"\nStep {step_num}: Skipping data generation (generate_data=false)")
@@ -493,6 +496,10 @@ def main():
         print(f"\nStep {step_num}: Running model training...")
         run_training(meta_config, exp_dir, project_root)
         print("  ✓ Training completed in exp/runs/")
+        
+        # Plot after training
+        print(f"\nStep {step_num}a: Updating visualizations with training results...")
+        create_visualizations(meta_config, exp_dir, script_dir)
         step_num += 1
     else:
         print(f"\nStep {step_num}: Skipping training (run_training=false)")
@@ -503,15 +510,14 @@ def main():
         print(f"\nStep {step_num}: Running analysis...")
         run_analysis(meta_config, exp_dir, project_root)
         print("  ✓ Analysis completed in exp/analysis/")
+        
+        # Plot after analysis
+        print(f"\nStep {step_num}a: Creating analysis visualizations...")
+        create_visualizations(meta_config, exp_dir, script_dir)
         step_num += 1
     else:
         print(f"\nStep {step_num}: Skipping analysis (run_analysis=false)")
         step_num += 1
-    
-    # Final step: Create all visualizations
-    print(f"\nStep {step_num}: Creating all visualizations...")
-    create_visualizations(meta_config, exp_dir, script_dir)
-    print("  ✓ All plots created in exp/plots/")
     
     print("\n==============================================")
     print("EXAMPLE COMPLETED!")

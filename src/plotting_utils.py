@@ -663,10 +663,18 @@ def plot_test_abundance_by_mse(analysis_data_path, output_dir, exp_dir, analysis
         ckpt_num = int(final_row['checkpoint_num'])
         ckpt_dir = os.path.join(runs_dir, f'ckpt-{ckpt_num}')
         
-        # Load test predictions
-        pred_path = os.path.join(ckpt_dir, 'test_predictions.pt')
-        if os.path.exists(pred_path):
-            final_predictions[seed] = torch.load(pred_path)
+        # Load test predictions (try both .pt and .csv)
+        pred_path_pt = os.path.join(ckpt_dir, 'test_predictions.pt')
+        pred_path_csv = os.path.join(ckpt_dir, 'test_predictions.csv')
+        
+        if os.path.exists(pred_path_pt):
+            final_predictions[seed] = torch.load(pred_path_pt)
+        elif os.path.exists(pred_path_csv):
+            # Load from CSV
+            import pandas as pd
+            df = pd.read_csv(pred_path_csv)
+            # Convert to tensor (assuming predictions are all columns except maybe an index)
+            final_predictions[seed] = torch.tensor(df.values, dtype=torch.float32)
     
     if not final_predictions:
         print("Warning: No test predictions found")
