@@ -1,0 +1,5 @@
+# Analysis configuration
+plot_config:
+  # Component mapping for x,y trajectory plot
+  x_component: 10  # Component 10 on x-axis (wider, higher strength)
+  y_component: 4  # Component 4 on y-axis (narrower, lower strength)

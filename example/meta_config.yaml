@@ -1,0 +1,28 @@
+# Meta configuration for spectral compositional generalization example
+# This file defines the experiment parameters and configuration file paths
+
+# Experiment directory (where all outputs will be saved)
+exp_dir: "./exp"
+
+# Path to spectral configuration file (physics parameters)
+spectra_config_path: "../configs/synthetic_spectra.yaml"
+
+# Path to data distribution configuration file (train/test splits)
+distribution_config_path: "../configs/data_distribution.yaml"
+
+# Path to training configuration file (model and training parameters)
+training_config_path: "../configs/training.yaml"
+
+# Path to analysis configuration file (MSE trajectory plotting)
+analysis_config_path: "../configs/analysis.yaml"
+
+# Random seeds for reproducibility
+# Can be single values or lists for multiple runs
+data_seed: [42]      # Seeds for data generation (spectra sampling, train/test splits)
+training_seed: [123, 124, 125, 126, 127] # Seeds for model initialization and training (weights, dropout, etc.)
+
+# Pipeline control flags
+generate_data: true    # Generate synthetic spectral data
+run_training: true     # Train neural network model
+run_analysis: true     # Run post-training analysis (evaluation, metrics, etc.)
+# Note: Plotting always follows available data/results

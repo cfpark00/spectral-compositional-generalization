@@ -1,0 +1,37 @@
+# Training configuration - model architecture and training hyperparameters
+# Controls how the neural network is trained
+
+# Model dimensions
+n_bins: 1024
+n_components: 20
+seed: 42
+# device: "cuda"  # Optional override, defaults to auto (cuda if available, else cpu)
+
+# Model architecture
+model_type: "mlp"
+hidden_dims: [128, 64]
+dropout_rate: 0.1
+activation: "relu"
+
+# Training hyperparameters
+epochs: 6
+batch_size: 64
+num_workers: 4
+learning_rate: 0.001
+weight_decay: 0.0001
+optimizer: "adamw"
+loss_function: "mse"
+
+# Checkpointing
+checkpoint_by: "ratio"  # "step" or "ratio"
+checkpoint_ratio: 0.05  # Save 20 checkpoints over training (0.05 = 5% intervals)
+# checkpoint_every_n_step: 100  # Alternative: checkpoint every N steps if checkpoint_by="step"
+
+# Logging
+log_every_n_step: 1
+
+# Testing/Evaluation
+test_every: "ckpt"  # "ckpt", "step", or "ratio" - when to evaluate on test set
+# test_every_n_step: 50     # If test_every="step"
+# test_ratio: 0.1           # If test_every="ratio"
+# Note: Every checkpoint is tested anyways during final evaluation

@@ -1,0 +1,77 @@
+# Data distribution configuration
+# Defines splits (train/test/val/etc) and their sampling distributions
+# Each split can use either component_combinations OR sampling_code
+
+splits:
+  train:
+    # Number of samples for this split
+    n_samples: 4000
+    
+    # Distribution specification using component combinations
+    distribution:
+      type: "component_combinations"
+      combinations:
+        # No components (pure blackbody baseline)
+        - weight: 1.0
+          components: []
+        
+        # Component 10 only (wider, higher strength)
+        - weight: 1.0
+          components: ["comp10"]
+        
+        # Component 4 only (narrower, lower strength)
+        - weight: 1.0
+          components: ["comp4"]
+      
+      # Note: weights will be normalized to sum to 1.0
+      # Each combination will be sampled with probability weight/sum(weights)
+      # Component abundances are sampled from [0,1] as configured in synthetic_spectra.yaml
+  
+  test:
+    # Number of samples for test split
+    n_samples: 1000
+    
+    # Test distribution - compositional gap!
+    distribution:
+      type: "component_combinations"
+      combinations:
+        # Both components together (never seen during training)
+        - weight: 1.0
+          components: ["comp10", "comp4"]
+
+# Example of additional split (commented out)
+# val:
+#   n_samples: 1000
+#   distribution:
+#     type: "component_combinations"
+#     combinations:
+#       - weight: 0.5
+#         components: ["comp3"]
+#       - weight: 0.5
+#         components: ["comp4"]
+
+# Alternative: Custom sampling code (advanced usage)
+# train:
+#   n_samples: 5000
+#   distribution:
+#     type: "sampling_code"
+#     code: |
+#       def sample_abundances(rng):
+#           """
+#           Custom sampling function.
+#           Args:
+#               rng: numpy random generator (use for reproducibility)
+#           Returns:
+#               dict mapping component names to abundances
+#           """
+#           # Example: Always include comp1, randomly include others
+#           abundances = {}
+#           abundances["comp1"] = rng.uniform(0.5, 1.0)  # Always present
+#           
+#           # Randomly include 0-2 other components
+#           n_extra = rng.integers(0, 3)
+#           extra_comps = rng.choice(["comp2", "comp3", "comp4"], n_extra, replace=False)
+#           for comp in extra_comps:
+#               abundances[comp] = rng.uniform(0.0, 1.0)
+#           
+#           return abundances

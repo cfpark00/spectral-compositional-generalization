@@ -1,0 +1,123 @@
+# Data configuration - defines the "world model" for synthetic spectra generation
+# Controls how the synthetic physics simulation works
+
+# Spectral grid configuration
+n_bins: 1024  # Number of wavelength bins in each spectrum
+wavelength_min: 300.0  # nm (nanometers)
+wavelength_max: 1200.0  # nm (nanometers)
+n_components: 20  # Total number of spectral components
+
+# Sampling configuration for data generation
+sampling:
+  temperature:
+    range: [3000, 7000]  # Kelvin - stellar temperature range
+    distribution: "uniform"  # Sampling distribution type
+  noise:
+    range: [0.01, 0.15]  # Min/max for multiplicative noise
+    distribution: "log_uniform"  # Log-uniform sampling
+  abundance:
+    range: [0.0, 1.0]  # Min/max for component abundances
+    distribution: "uniform"  # Sampling distribution type
+
+# Spectral lines configuration
+# Each line represents a different spectral component
+lines:
+  - label: "comp1"
+    center: 732.0  # nm (peak wavelength)
+    width: 3.2  # nm (Gaussian sigma)
+    strength: 0.8  # Multiplicative factor [-1, 1]
+  
+  - label: "comp2"
+    center: 1045.0
+    width: 4.5
+    strength: -0.6
+  
+  - label: "comp3"
+    center: 340.0
+    width: 6.4
+    strength: 0.9
+  
+  - label: "comp4"
+    center: 891.0
+    width: 9.0
+    strength: -0.4
+  
+  - label: "comp5"
+    center: 423.0
+    width: 12.7
+    strength: 0.7
+  
+  - label: "comp6"
+    center: 1156.0
+    width: 18.0
+    strength: -0.8
+  
+  - label: "comp7"
+    center: 567.0
+    width: 25.4
+    strength: 0.5
+  
+  - label: "comp8"
+    center: 812.0
+    width: 35.9
+    strength: -0.3
+  
+  - label: "comp9"
+    center: 320.0
+    width: 50.8
+    strength: 0.6
+  
+  - label: "comp10"
+    center: 956.0
+    width: 71.8
+    strength: -0.7
+  
+  - label: "comp11"
+    center: 378.0
+    width: 101.6
+    strength: 0.4
+  
+  - label: "comp12"
+    center: 689.0
+    width: 250.0
+    strength: -0.5
+  
+  - label: "comp13"
+    center: 1123.0
+    width: 3.8
+    strength: 0.8
+  
+  - label: "comp14"
+    center: 445.0
+    width: 5.4
+    strength: -0.9
+  
+  - label: "comp15"
+    center: 845.0
+    width: 7.6
+    strength: 0.3
+  
+  - label: "comp16"
+    center: 380.0
+    width: 10.7
+    strength: -0.2
+  
+  - label: "comp17"
+    center: 1180.0
+    width: 15.2
+    strength: 0.7
+  
+  - label: "comp18"
+    center: 512.0
+    width: 21.5
+    strength: -0.6
+  
+  - label: "comp19"
+    center: 778.0
+    width: 30.3
+    strength: 0.5
+  
+  - label: "comp20"
+    center: 650.0
+    width: 350.0
+    strength: -0.4
