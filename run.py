@@ -376,10 +376,18 @@ def create_visualizations(meta_config, exp_dir, script_dir):
             # Get analysis config path if available
             analysis_config_path = meta_config.get('analysis_config_path')
             try:
+                print(f"  Calling plot_test_abundance_by_mse with:")
+                print(f"    trajectory_data_path: {trajectory_data_path}")
+                print(f"    plots_dir: {plots_dir}")
+                print(f"    exp_dir: {exp_dir}")
+                print(f"    analysis_config_path: {analysis_config_path}")
                 plot_test_abundance_by_mse(trajectory_data_path, plots_dir, exp_dir, analysis_config_path)
                 print("  ✓ Test abundance MSE plot saved")
             except Exception as e:
+                import traceback
                 print(f"  ⚠️  Could not create test abundance MSE plot: {e}")
+                print("  Full traceback:")
+                traceback.print_exc()
     
     print(f"\nAll visualizations saved in: {plots_dir}")
     print("Files created:")
