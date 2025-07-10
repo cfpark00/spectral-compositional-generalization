@@ -258,9 +258,6 @@ def run_analysis(meta_config, exp_dir, project_root):
 
 def create_visualizations(meta_config, exp_dir, script_dir):
     """Create all visualizations using plotting utilities."""
-    # Add project root to path for imports
-    project_root = os.path.dirname(script_dir)
-    sys.path.append(project_root)
     
     # Import plotting utilities
     import yaml
@@ -281,7 +278,7 @@ def create_visualizations(meta_config, exp_dir, script_dir):
     
     # Check what data/results are available
     data_available = meta_config.get('generate_data', True) and os.path.exists(os.path.join(exp_dir, 'data'))
-    training_available = meta_config.get('run_training', True) and os.path.exists(os.path.join(exp_dir, 'train'))
+    training_available = meta_config.get('run_training', True) and os.path.exists(os.path.join(exp_dir, 'runs'))
     all_flags_false = not meta_config.get('generate_data', True) and not meta_config.get('run_training', True) and not meta_config.get('run_analysis', True)
     
     if all_flags_false:
@@ -350,16 +347,20 @@ def create_visualizations(meta_config, exp_dir, script_dir):
         print("\n⚠️  No data found - skipping distribution visualizations")
     
     # Create training visualizations if training was run
-    train_path = os.path.join(exp_dir, 'train')
-    if os.path.exists(train_path):
+    runs_path = os.path.join(exp_dir, 'runs')
+    if os.path.exists(runs_path):
         print("\nCreating training visualizations...")
         
-        plot_training_curves(train_path, plots_dir)
-        print("  ✓ Training curves plot saved")
-        
-        if os.path.exists(data_path):
-            plot_prediction_analysis(train_path, data_dict, plots_dir)
-            print("  ✓ Prediction analysis plot saved")
+        # For now, use first run for training curves
+        first_run = sorted(os.listdir(runs_path))[0] if os.listdir(runs_path) else None
+        if first_run:
+            first_run_path = os.path.join(runs_path, first_run)
+            plot_training_curves(first_run_path, plots_dir)
+            print("  ✓ Training curves plot saved")
+            
+            if os.path.exists(data_path) and 'data_dict' in locals():
+                plot_prediction_analysis(first_run_path, data_dict, plots_dir)
+                print("  ✓ Prediction analysis plot saved")
     
     # Create analysis visualizations if analysis data is available
     analysis_path = os.path.join(exp_dir, 'analysis')
@@ -374,8 +375,11 @@ def create_visualizations(meta_config, exp_dir, script_dir):
             
             # Get analysis config path if available
             analysis_config_path = meta_config.get('analysis_config_path')
-            plot_test_abundance_by_mse(trajectory_data_path, plots_dir, exp_dir, analysis_config_path)
-            print("  ✓ Test abundance MSE plot saved")
+            try:
+                plot_test_abundance_by_mse(trajectory_data_path, plots_dir, exp_dir, analysis_config_path)
+                print("  ✓ Test abundance MSE plot saved")
+            except Exception as e:
+                print(f"  ⚠️  Could not create test abundance MSE plot: {e}")
     
     print(f"\nAll visualizations saved in: {plots_dir}")
     print("Files created:")
@@ -385,11 +389,13 @@ def create_visualizations(meta_config, exp_dir, script_dir):
         print("  - train_samples.png: Training distribution samples")
         print("  - test_samples.png: Test distribution samples")
         print("  - abundance_scatter.png: Train vs test in abundance space")
-    if os.path.exists(train_path):
+    if os.path.exists(runs_path):
         print("  - training_curves.png: MSE curves for train and test")
         print("  - prediction_analysis.png: Best model predictions vs ground truth")
-    if os.path.exists(analysis_path):
+    if os.path.exists(os.path.join(exp_dir, 'analysis')):
         print("  - mse_trajectory.png: MSE trajectory plot (all runs overlapped)")
+        print("  - mse_time_series.png: Component MSE vs training steps")
+        print("  - test_abundance_mse.png: Test abundances colored by ensemble MSE")
 
 
 def main():
@@ -477,18 +483,9 @@ def main():
         generate_data(meta_config, exp_dir, project_root)
         print("  ✓ Data generated in exp/data/")
         
-        # Plot immediately after data generation
-        print(f"\nStep {step_num}a: Creating physics and data visualizations...")
-        create_visualizations(meta_config, exp_dir, script_dir)
-        print("  ✓ Physics and data plots created")
         step_num += 1
     else:
         print(f"\nStep {step_num}: Skipping data generation (generate_data=false)")
-        
-        # Still create physics plots if no data
-        print(f"\nStep {step_num}a: Creating physics visualizations...")
-        create_visualizations(meta_config, exp_dir, script_dir)
-        print("  ✓ Physics plots created")
         step_num += 1
     
     # Step 4: Run training (if enabled)
@@ -496,11 +493,6 @@ def main():
         print(f"\nStep {step_num}: Running model training...")
         run_training(meta_config, exp_dir, project_root)
         print("  ✓ Training completed in exp/runs/")
-        
-        # Plot immediately after training
-        print(f"\nStep {step_num}a: Creating training visualizations...")
-        create_visualizations(meta_config, exp_dir, script_dir)
-        print("  ✓ Training plots added")
         step_num += 1
     else:
         print(f"\nStep {step_num}: Skipping training (run_training=false)")
@@ -511,15 +503,15 @@ def main():
         print(f"\nStep {step_num}: Running analysis...")
         run_analysis(meta_config, exp_dir, project_root)
         print("  ✓ Analysis completed in exp/analysis/")
-        
-        # Plot after analysis
-        print(f"\nStep {step_num}a: Creating analysis visualizations...")
-        create_visualizations(meta_config, exp_dir, script_dir)
-        print("  ✓ Analysis plots added")
         step_num += 1
     else:
         print(f"\nStep {step_num}: Skipping analysis (run_analysis=false)")
         step_num += 1
+    
+    # Final step: Create all visualizations
+    print(f"\nStep {step_num}: Creating all visualizations...")
+    create_visualizations(meta_config, exp_dir, script_dir)
+    print("  ✓ All plots created in exp/plots/")
     
     print("\n==============================================")
     print("EXAMPLE COMPLETED!")
@@ -543,25 +535,29 @@ def main():
     if meta_config.get('run_training', True):
         print("├── runs/              # Training results")
         print("│   └── seed-*/        # Results for each training seed")
-        print("│       ├── logs/      # Training logs")
-        print("│       ├── ckpts/     # Model checkpoints (ckpt-1/, ckpt-2/, etc.)")
-        print("│       └── analysis/  # Analysis results")
+        print("│       └── train/     # Training outputs")
+        print("│           └── ckpts/ # Model checkpoints")
+    if meta_config.get('run_analysis', True):
+        print("├── analysis/          # Combined analysis results")
+        print("│   └── trajectory_data.csv")
     print("└── plots/             # Visualizations")
     print("    ├── diverse_samples.png      # Random spectra with physics")
     print("    ├── spectral_lines.png       # Component configurations")
-    print("    ├── train_samples.png        # Training distribution")
-    print("    ├── test_samples.png         # Test distribution")
-    print("    ├── abundance_scatter.png    # Compositional gap visualization")
+    if meta_config.get('generate_data', True):
+        print("    ├── train_samples.png        # Training distribution")
+        print("    ├── test_samples.png         # Test distribution")
+        print("    ├── abundance_scatter.png    # Compositional gap visualization")
     if meta_config.get('run_training', True):
         print("    ├── training_curves.png      # MSE curves during training")
         print("    ├── prediction_analysis.png  # Best model predictions")
-        print("    └── runs/seed-*/analysis/    # Per-seed analysis results")
-        print("        ├── mse_trajectory.png   # MSE trajectory plots")
-        print("        └── trajectory_data.csv  # Trajectory data")
+    if meta_config.get('run_analysis', True):
+        print("    ├── mse_trajectory.png       # MSE trajectory (all runs)")
+        print("    ├── mse_time_series.png      # Component MSE vs time")
+        print("    └── test_abundance_mse.png   # Test abundances colored by MSE")
     print("")
     print("Key insights:")
-    print("  - Training: Individual components only (comp19 OR comp15)")
-    print("  - Testing: Combinations (comp19 AND comp15)")
+    print("  - Training: Individual components only")
+    print("  - Testing: Combinations of components")
     print("  - This creates the compositional generalization challenge!")
     print("  - Multiple seeds allow studying training variability")
 
