@@ -218,13 +218,21 @@ python run.py meta_config.yaml
 
 This creates a complete experiment in `example/exp/` with:
 - `configs/`: Configuration files for reproducibility
-- `data/`: Generated synthetic datasets
+- `data/seed-*/`: Generated synthetic datasets (per data seed)
+- `runs/seed-*/`: Training runs (per training seed)
+- `analysis/`: Combined analysis results across all runs
+  - `trajectory_data.csv`: MSE trajectory data
 - `plots/`: Comprehensive visualizations
   - `diverse_samples.png`: Various spectra with blackbody baselines
   - `spectral_lines.png`: All 20 component profiles
   - `train_samples.png`: Training distribution (individual components)
   - `test_samples.png`: Test distribution (combinations)
   - `abundance_scatter.png`: Compositional gap visualization
+  - `training_curves.png`: Training/test loss curves (if training enabled)
+  - `prediction_analysis.png`: Prediction scatter plots (if training enabled)
+  - `mse_trajectory.png`: 2D MSE trajectory with ensemble mean (if analysis enabled)
+  - `mse_time_series.png`: Component MSE vs training steps (if analysis enabled)
+  - `test_abundance_mse.png`: Test abundances colored by ensemble MSE (if analysis enabled)
 
 ### Custom Experiments
 

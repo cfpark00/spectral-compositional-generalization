@@ -235,7 +235,9 @@ data/
 *.pkl
 *.pickle
 
-# Experiment results (now inside data/)
+# Experiment results
+exp/
+example/exp/
 experiments/
 logs/
 checkpoints/
