@@ -661,7 +661,8 @@ def plot_test_abundance_by_mse(analysis_data_path, output_dir, exp_dir, analysis
         final_row = seed_data.iloc[-1]
         
         # Find the checkpoint directory
-        runs_dir = os.path.join(exp_dir, 'runs', f'seed-{seed}', 'train', 'ckpts')
+        # seed already contains "seed-" prefix from trajectory data
+        runs_dir = os.path.join(exp_dir, 'runs', seed, 'train', 'ckpts')
         ckpt_num = int(final_row['checkpoint_num'])
         ckpt_dir = os.path.join(runs_dir, f'ckpt-{ckpt_num}')
         
