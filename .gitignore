@@ -250,7 +250,7 @@ wandb/
 *.ckpt
 
 # Plots and figures
-*.png
+# *.png  # Commented out to allow assets/ plots
 *.jpg
 *.jpeg
 *.pdf
